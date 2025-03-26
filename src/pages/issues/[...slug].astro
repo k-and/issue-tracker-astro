@@ -1,0 +1,194 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+
+export async function getStaticPaths() {
+	const issues = await getCollection('issues');
+	return issues.map((entry) => ({
+		params: { slug: entry.slug },
+		props: { entry },
+	}));
+}
+
+interface Props {
+	entry: CollectionEntry<'issues'>;
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+
+function getStatusColor(status: string): string {
+	switch (status) {
+		case 'pending':
+			return '#f59e0b'; // amber
+		case 'reported':
+			return '#3b82f6'; // blue
+		case 'acknowledged':
+			return '#10b981'; // green
+		case 'resolved':
+			return '#6b7280'; // gray
+		default:
+			return '#6b7280';
+	}
+}
+
+function getPriorityColor(priority: string): string {
+	switch (priority) {
+		case 'high':
+			return '#ef4444'; // red
+		case 'medium':
+			return '#f59e0b'; // amber
+		case 'low':
+			return '#10b981'; // green
+		default:
+			return '#6b7280';
+	}
+}
+---
+
+<Layout title={entry.data.title}>
+	<article>
+		<header>
+			<h1>{entry.data.title}</h1>
+			<div class="metadata">
+				<div class="badges">
+					<span
+						class="status-badge"
+						style={`background-color: ${getStatusColor(entry.data.status)}`}
+					>
+						{entry.data.status}
+					</span>
+					<span
+						class="priority-badge"
+						style={`background-color: ${getPriorityColor(entry.data.priority)}`}
+					>
+						{entry.data.priority}
+					</span>
+				</div>
+				<div class="details">
+					<p><strong>Software:</strong> {entry.data.software}</p>
+					<p><strong>Type:</strong> {entry.data.type === 'bug' ? '🐛 Bug' : entry.data.type === 'feature' ? '🔧 Feature' : entry.data.type}</p>
+					<p><strong>Date:</strong> {new Date(entry.data.date).toLocaleDateString()}</p>
+					<p><strong>Acknowledged:</strong> {entry.data.acknowledged ? 'Yes' : 'No'}</p>
+				</div>
+			</div>
+		</header>
+		<div class="content">
+			<Content />
+		</div>
+		<div class="actions">
+			<a href="/Issue-Tracker-Astro/" class="back-link">← Back to Issues</a>
+		</div>
+	</article>
+</Layout>
+
+<style>
+	article {
+		background: white;
+		padding: 2rem;
+		border-radius: 8px;
+		box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+	}
+
+	header {
+		margin-bottom: 2rem;
+		padding-bottom: 1rem;
+		border-bottom: 1px solid #eee;
+	}
+
+	h1 {
+		margin-bottom: 1rem;
+		color: #1a1a1a;
+		font-size: 1.8rem;
+	}
+
+	.metadata {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		align-items: flex-start;
+	}
+
+	.badges {
+		display: flex;
+		gap: 0.5rem;
+	}
+
+	.status-badge, .priority-badge {
+		padding: 0.25rem 0.5rem;
+		border-radius: 4px;
+		color: white;
+		font-size: 0.875rem;
+	}
+
+	.details {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		gap: 1rem;
+	}
+
+	.details p {
+		margin: 0;
+		color: #4a5568;
+	}
+
+	.content {
+		line-height: 1.6;
+		color: #2d3748;
+		margin: 2rem 0;
+	}
+
+	.content :global(h2) {
+		margin-top: 2rem;
+		margin-bottom: 1rem;
+		font-size: 1.5rem;
+		color: #1a1a1a;
+	}
+
+	.content :global(p) {
+		margin-bottom: 1rem;
+	}
+
+	.content :global(ul), .content :global(ol) {
+		margin-bottom: 1rem;
+		padding-left: 1.5rem;
+	}
+
+	.content :global(li) {
+		margin-bottom: 0.5rem;
+	}
+
+	.actions {
+		margin-top: 2rem;
+		padding-top: 1rem;
+		border-top: 1px solid #eee;
+	}
+
+	.back-link {
+		display: inline-flex;
+		align-items: center;
+		color: #3b82f6;
+		text-decoration: none;
+		font-weight: 500;
+	}
+
+	.back-link:hover {
+		text-decoration: underline;
+	}
+
+	@media (max-width: 768px) {
+		.metadata {
+			flex-direction: column;
+		}
+
+		.details {
+			grid-template-columns: 1fr;
+			width: 100%;
+		}
+
+		article {
+			padding: 1rem;
+		}
+	}
+</style>

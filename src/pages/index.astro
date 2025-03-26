@@ -1,0 +1,27 @@
+---
+import Layout from '../layouts/Layout.astro';
+import IssueTable from '../components/IssueTable.astro';
+import { getCollection } from 'astro:content';
+
+const issues = await getCollection('issues');
+---
+
+<Layout title="Issue Tracker">
+	<h1>Issue Tracker</h1>
+	<p class="description">Track and manage software issues and feature requests for your favorite apps.</p>
+	<IssueTable issues={issues} />
+</Layout>
+
+<style>
+	h1 {
+		margin-bottom: 0.5rem;
+		font-size: 2rem;
+		color: #1a1a1a;
+	}
+
+	.description {
+		color: #666;
+		margin-bottom: 2rem;
+		font-size: 1.1rem;
+	}
+</style>

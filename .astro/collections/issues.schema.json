@@ -1,0 +1,60 @@
+{
+  "$ref": "#/definitions/issues",
+  "definitions": {
+    "issues": {
+      "type": "object",
+      "properties": {
+        "software": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "bug",
+            "feature"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "reported",
+            "acknowledged",
+            "resolved"
+          ]
+        },
+        "acknowledged": {
+          "type": "boolean"
+        },
+        "priority": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "date": {
+          "type": "string"
+        },
+        "$schema": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "software",
+        "type",
+        "title",
+        "status",
+        "acknowledged",
+        "priority",
+        "date"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

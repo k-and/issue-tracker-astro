@@ -1,0 +1,247 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+	issues: CollectionEntry<'issues'>[];
+}
+
+const { issues } = Astro.props;
+
+const getStatusColor = (status: string) => {
+	switch (status) {
+		case 'pending':
+			return '#f59e0b'; // amber
+		case 'reported':
+			return '#3b82f6'; // blue
+		case 'acknowledged':
+			return '#10b981'; // green
+		case 'resolved':
+			return '#6b7280'; // gray
+		default:
+			return '#6b7280';
+	}
+};
+
+const getPriorityColor = (priority: string) => {
+	switch (priority) {
+		case 'high':
+			return '#ef4444'; // red
+		case 'medium':
+			return '#f59e0b'; // amber
+		case 'low':
+			return '#10b981'; // green
+		default:
+			return '#6b7280';
+	}
+};
+---
+
+<div class="table-container">
+	<div class="filters">
+		<select id="statusFilter">
+			<option value="">All Statuses</option>
+			<option value="pending">Pending</option>
+			<option value="reported">Reported</option>
+			<option value="acknowledged">Acknowledged</option>
+			<option value="resolved">Resolved</option>
+		</select>
+		<select id="typeFilter">
+			<option value="">All Types</option>
+			<option value="bug">🐛 Bug</option>
+			<option value="feature">🔧 Feature</option>
+		</select>
+		<select id="priorityFilter">
+			<option value="">All Priorities</option>
+			<option value="high">High</option>
+			<option value="medium">Medium</option>
+			<option value="low">Low</option>
+		</select>
+	</div>
+	<table>
+		<thead>
+			<tr>
+				<th data-sort="software">Software</th>
+				<th data-sort="title">Title</th>
+				<th data-sort="type">Type</th>
+				<th data-sort="status">Status</th>
+				<th data-sort="priority">Priority</th>
+				<th data-sort="date">Date</th>
+			</tr>
+		</thead>
+		<tbody>
+			{issues.map((issue) => (
+				<tr>
+					<td>{issue.data.software}</td>
+					<td>
+						<a href={`/Issue-Tracker-Astro/issues/${issue.slug}`}>{issue.data.title}</a>
+					</td>
+					<td class="centered">
+						{issue.data.type === 'bug' ? '🐛' : issue.data.type === 'feature' ? '🔧' : issue.data.type}
+					</td>
+					<td class="centered">
+						<span
+							class="status-badge"
+							style={`background-color: ${getStatusColor(issue.data.status)}`}
+						>
+							{issue.data.status}
+						</span>
+					</td>
+					<td class="centered">
+						<span
+							class="priority-badge"
+							style={`background-color: ${getPriorityColor(issue.data.priority)}`}
+						>
+							{issue.data.priority}
+						</span>
+					</td>
+					<td class="centered">{new Date(issue.data.date).toLocaleDateString()}</td>
+				</tr>
+			))}
+		</tbody>
+	</table>
+</div>
+
+<style>
+	.table-container {
+		overflow-x: auto;
+		background: white;
+		border-radius: 8px;
+		box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+		padding: 1rem;
+	}
+
+	.filters {
+		display: flex;
+		gap: 1rem;
+		margin-bottom: 1rem;
+	}
+
+	select {
+		padding: 0.5rem;
+		border: 1px solid #ddd;
+		border-radius: 4px;
+		background: white;
+	}
+
+	table {
+		width: 100%;
+		border-collapse: collapse;
+	}
+
+	th, td {
+		padding: 0.75rem;
+		text-align: left;
+		border-bottom: 1px solid #eee;
+	}
+
+	th[data-sort="type"], th[data-sort="status"], th[data-sort="priority"], th[data-sort="date"] {
+		text-align: center;
+	}
+
+	.centered {
+		text-align: center;
+	}
+
+	th {
+		background: #f8f9fa;
+		font-weight: 600;
+		cursor: pointer;
+	}
+
+	th:hover {
+		background: #f1f3f5;
+	}
+
+	.status-badge, .priority-badge {
+		padding: 0.25rem 0.5rem;
+		border-radius: 4px;
+		color: white;
+		font-size: 0.875rem;
+		display: inline-block;
+	}
+
+	a {
+		color: #3b82f6;
+		text-decoration: none;
+	}
+
+	a:hover {
+		text-decoration: underline;
+	}
+
+	@media (max-width: 768px) {
+		.filters {
+			flex-direction: column;
+		}
+	}
+</style>
+
+<script>
+	let currentSort = { column: 'date', direction: 'desc' };
+
+	// Sorting functionality
+	document.querySelectorAll('th[data-sort]').forEach(header => {
+		header.addEventListener('click', () => {
+			const column = header.dataset.sort;
+			const direction = currentSort.column === column && currentSort.direction === 'asc' ? 'desc' : 'asc';
+			currentSort = { column, direction };
+			sortTable(column, direction);
+		});
+	});
+
+	function sortTable(column, direction) {
+		const tbody = document.querySelector('tbody');
+		const rows = Array.from(tbody.querySelectorAll('tr'));
+
+		rows.sort((a, b) => {
+			const aValue = a.querySelector(`td:nth-child(${getColumnIndex(column)})`).textContent.trim();
+			const bValue = b.querySelector(`td:nth-child(${getColumnIndex(column)})`).textContent.trim();
+
+			if (direction === 'asc') {
+				return aValue.localeCompare(bValue);
+			} else {
+				return bValue.localeCompare(aValue);
+			}
+		});
+
+		rows.forEach(row => tbody.appendChild(row));
+	}
+
+	function getColumnIndex(column) {
+		const headers = document.querySelectorAll('th[data-sort]');
+		for (let i = 0; i < headers.length; i++) {
+			if (headers[i].dataset.sort === column) {
+				return i + 1;
+			}
+		}
+		return 1;
+	}
+
+	// Filtering functionality
+	const filters = document.querySelectorAll('.filters select');
+	filters.forEach(filter => {
+		filter.addEventListener('change', applyFilters);
+	});
+
+	function applyFilters() {
+		const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
+		const typeFilter = document.getElementById('typeFilter').value.toLowerCase();
+		const priorityFilter = document.getElementById('priorityFilter').value.toLowerCase();
+
+		const rows = document.querySelectorAll('tbody tr');
+		rows.forEach(row => {
+			const status = row.querySelector('td:nth-child(4) .status-badge').textContent.toLowerCase().trim();
+			const type = row.querySelector('td:nth-child(3)').textContent.toLowerCase().trim();
+			const priority = row.querySelector('td:nth-child(5) .priority-badge').textContent.toLowerCase().trim();
+
+			const statusMatch = !statusFilter || status === statusFilter;
+			const typeMatch = !typeFilter ||
+				(typeFilter === 'bug' && type.includes('🐛')) ||
+				(typeFilter === 'feature' && type.includes('🔧')) ||
+				type === typeFilter;
+			const priorityMatch = !priorityFilter || priority === priorityFilter;
+
+			row.style.display = statusMatch && typeMatch && priorityMatch ? '' : 'none';
+		});
+	}
+</script>
